@@ -133,27 +133,35 @@ offline();if(!state.feed.length)say("Willkommen in Neustadt. Du startest bei nul
  try{
   const THREE=await import("https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js");
   const scene=new THREE.Scene();
-  scene.background=new THREE.Color(0x8e9ba9);
-  scene.fog=new THREE.FogExp2(0x8e9ba9,0.00265);
+  scene.background=new THREE.Color(0x78b8e9);
+  scene.fog=new THREE.Fog(0xc4d2d5,155,470);
   const camera=new THREE.PerspectiveCamera(62,1,0.1,650);
   const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:"high-performance"});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.65));
   renderer.setSize(root.clientWidth,root.clientHeight);
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=1.12;
+  renderer.toneMappingExposure=1.28;
   renderer.shadowMap.enabled=true;
   renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   root.appendChild(renderer.domElement);
 
   const mat=(color,roughness=0.92)=>new THREE.MeshStandardMaterial({color,roughness});
-  const asphalt=mat(0x303640),sidewalk=mat(0x85847e),curb=mat(0xb5b0a3),grass=mat(0x56634e),windowMat=new THREE.MeshStandardMaterial({color:0xf2cf83,emissive:0x8b6533,emissiveIntensity:0.34,roughness:0.8});
+  function surfaceTexture(base,grit){
+   const cv=document.createElement("canvas");cv.width=256;cv.height=256;const cx=cv.getContext("2d");cx.fillStyle=base;cx.fillRect(0,0,256,256);
+   for(let i=0;i<grit;i++){let n=65+Math.random()*135;cx.fillStyle="rgba("+n+","+n+","+n+",.16)";cx.fillRect(Math.random()*256,Math.random()*256,1+Math.random()*3,1+Math.random()*3)}
+   const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.RepeatWrapping;t.repeat.set(4,14);return t;
+  }
+  const asphalt=new THREE.MeshStandardMaterial({map:surfaceTexture("#55545a",2700),roughness:1}),sidewalk=mat(0xb4ad9e),curb=mat(0xc7bca8),grass=mat(0x75854e),windowMat=new THREE.MeshStandardMaterial({color:0x9bb9c5,roughness:.3,metalness:.14});
   const sceneMat={road:asphalt,walk:sidewalk};
   scene.add(new THREE.HemisphereLight(0xdce8f1,0x555044,2.05));
   const sun=new THREE.DirectionalLight(0xffe0b0,2.35);sun.position.set(-80,125,65);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-180;sun.shadow.camera.right=180;sun.shadow.camera.top=180;sun.shadow.camera.bottom=-180;scene.add(sun);
   const fill=new THREE.DirectionalLight(0x9ebcdd,0.55);fill.position.set(90,50,-100);scene.add(fill);
 
-  const ground=new THREE.Mesh(new THREE.PlaneGeometry(600,600),mat(0x66705e));ground.rotation.x=-Math.PI/2;ground.position.y=-0.32;ground.receiveShadow=true;scene.add(ground);
+  const groundTexture=surfaceTexture("#8e906e",1900);groundTexture.repeat.set(12,12);
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(700,700),new THREE.MeshStandardMaterial({map:groundTexture,roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-0.32;ground.receiveShadow=true;scene.add(ground);
+  const hillPalette=[0x8b926d,0xa39a74,0x77845f,0xb4a17a];
+  for(let i=0;i<30;i++){const a=Math.random()*Math.PI*2,d=245+Math.random()*85,r=24+Math.random()*38,h=22+Math.random()*38;const hill=new THREE.Mesh(new THREE.ConeGeometry(r,h,5),mat(hillPalette[i%hillPalette.length]));hill.position.set(Math.cos(a)*d,h/2-2,Math.sin(a)*d);hill.rotation.y=Math.random()*Math.PI;hill.castShadow=true;scene.add(hill);}
   const roadLines=[-160,-80,0,80,160];
   function slab(w,d,x,y,z,material,receive=true){const m=new THREE.Mesh(new THREE.BoxGeometry(w,0.22,d),material);m.position.set(x,y,z);m.receiveShadow=receive;m.castShadow=false;scene.add(m);return m}
   // Asphalt strips and raised sidewalks form a navigable grid.
@@ -171,15 +179,18 @@ offline();if(!state.feed.length)say("Willkommen in Neustadt. Du startest bei nul
   });
   // Small parks in selected city blocks.
   function addTree(x,z,scale=1){
-   const g=new THREE.Group();
-   const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.28*scale,.38*scale,2.7*scale,6),mat(0x68513b));trunk.position.y=1.2*scale;g.add(trunk);
-   const crown=new THREE.Mesh(new THREE.ConeGeometry(2.0*scale,4.4*scale,7),mat(0x435f48));crown.position.y=4.0*scale;g.add(crown);
-   const crown2=new THREE.Mesh(new THREE.ConeGeometry(1.45*scale,3.1*scale,7),mat(0x55724f));crown2.position.y=5.25*scale;g.add(crown2);
+   const g=new THREE.Group();const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.22*scale,.38*scale,3*scale,7),mat(0x75543a));trunk.position.y=1.4*scale;g.add(trunk);
+   const crown=new THREE.Mesh(new THREE.IcosahedronGeometry(2.1*scale,1),mat(0x527446));crown.position.y=3.75*scale;crown.scale.y=1.2;g.add(crown);
    g.position.set(x,0,z);g.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});scene.add(g);
+  }
+  function addPalm(x,z,scale=1){
+   const g=new THREE.Group();const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.18*scale,.42*scale,8*scale,7,5),mat(0x8b6946));trunk.position.y=4*scale;trunk.castShadow=true;g.add(trunk);
+   for(let i=0;i<9;i++){const a=i*Math.PI*2/9;const frond=new THREE.Group();frond.rotation.y=a;const stem=new THREE.Mesh(new THREE.CylinderGeometry(.045*scale,.09*scale,5.4*scale,5),mat(0xa1a05b));stem.rotation.x=Math.PI/2;stem.position.z=-2.55*scale;frond.add(stem);const leaf=new THREE.Mesh(new THREE.ConeGeometry(.62*scale,4.2*scale,5),mat(i%2?0x53784a:0x68874b));leaf.rotation.x=Math.PI/2;leaf.position.set(0,-.12*scale,-4.45*scale);frond.add(leaf);g.add(frond)}
+   g.position.set(x,0,z);scene.add(g);
   }
   // Building footprints are also used by the player's simple collision system.
   const colliders=[];
-  const buildingColors=[0xb5a48d,0x8f9697,0x9d8272,0x77858a,0xb0a18b,0x777d82,0x9b8e81,0x747c72,0xb9ad9b];
+  const buildingColors=[0xd0b795,0xc5b8a0,0xb88f74,0x9eafb2,0xd6c6a8,0xa7a39a,0xb99c7d,0xc8b59e,0x8e9b9d,0xd9c8a6];
   const businessNames=["BÄCKEREI","MARKT","AUTOHAUS","APOTHEKE","WOHNEN","WERKSTATT","CAFÉ","STADTWERKE"];
   function makeSign(text){
    const cv=document.createElement("canvas");cv.width=512;cv.height=128;
@@ -190,18 +201,24 @@ offline();if(!state.feed.length)say("Willkommen in Neustadt. Du startest bei nul
    const group=new THREE.Group();
    const baseMat=mat(buildingColors[idx%buildingColors.length]);
    const body=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),baseMat);body.position.y=h/2;body.castShadow=true;body.receiveShadow=true;group.add(body);
-   const roof=new THREE.Mesh(new THREE.BoxGeometry(w+0.35,.55,d+0.35),mat(0x55575a));roof.position.y=h+.18;group.add(roof);
+   const roof=new THREE.Mesh(new THREE.BoxGeometry(w+.5,.48,d+.5),mat(0x827a6d));roof.position.y=h+.18;group.add(roof);
+   const cornice=new THREE.Mesh(new THREE.BoxGeometry(w+.7,.38,d+.7),mat(0x746d61));cornice.position.y=h-.45;group.add(cornice);
+   const plinth=new THREE.Mesh(new THREE.BoxGeometry(w+.16,1.05,d+.16),mat(0x887c69));plinth.position.y=.53;group.add(plinth);
    const floors=Math.max(2,Math.floor(h/4));
    for(let f=0;f<floors;f++){
     const y=2.1+f*3.1;if(y>h-1)continue;
     const count=Math.max(2,Math.floor(w/3.2));
     for(let n=0;n<count;n++){
      const wx=-w/2+1.7+n*((w-3.4)/Math.max(1,count-1));
-     const win=new THREE.Mesh(new THREE.BoxGeometry(1.05,1.25,.1),windowMat);win.position.set(wx,y,d/2+.055);group.add(win);
-     const win2=new THREE.Mesh(new THREE.BoxGeometry(1.05,1.25,.1),windowMat);win2.position.set(wx,y,-d/2-.055);group.add(win2);
+     const win=new THREE.Mesh(new THREE.BoxGeometry(1.2,1.45,.11),windowMat);win.position.set(wx,y,d/2+.075);group.add(win);
+     const frame=new THREE.Mesh(new THREE.BoxGeometry(1.42,1.68,.14),mat(0xe0d2ba));frame.position.set(wx,y,d/2+.045);group.add(frame);
+     const win2=new THREE.Mesh(new THREE.BoxGeometry(1.2,1.45,.11),windowMat);win2.position.set(wx,y,-d/2-.075);group.add(win2);
+     if(idx%3===0&&f===0){const awning=new THREE.Mesh(new THREE.BoxGeometry(2.1,.32,1.0),mat(idx%2?0xa44e3d:0x3f7888));awning.position.set(wx,1.25,d/2+.45);group.add(awning)}
     }
    }
-   if(idx%3===0){const sign=makeSign(businessNames[idx%businessNames.length]);sign.position.set(0,2.65,d/2+.12);group.add(sign);}
+   if(idx%3===0){const sign=makeSign(businessNames[idx%businessNames.length]);sign.position.set(0,2.8,d/2+.12);group.add(sign);}
+   if(idx%4===1){const tank=new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,1.8,8),mat(0x85857d));tank.position.set(w*.22,h+1.2,0);group.add(tank)}
+   for(let q=0;q<2;q++){const vent=new THREE.Mesh(new THREE.BoxGeometry(.9,.65,.85),mat(0x9d988d));vent.position.set(-w*.22+q*1.4,h+.52,-d*.2);group.add(vent)}
    group.position.set(x,0,z);scene.add(group);colliders.push({minX:x-w/2-1.25,maxX:x+w/2+1.25,minZ:z-d/2-1.25,maxZ:z+d/2+1.25});
   }
   let seed=37;function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
@@ -217,6 +234,7 @@ offline();if(!state.feed.length)say("Willkommen in Neustadt. Du startest bei nul
   // A small fenced green square and trees.
   const park=new THREE.Mesh(new THREE.PlaneGeometry(27,27),mat(0x536d4c));park.rotation.x=-Math.PI/2;park.position.set(40,0.01,-40);scene.add(park);
   [[-8,-8],[8,-8],[-8,8],[8,8]].forEach(p=>addTree(40+p[0],-40+p[1],.95));
+  for(const v of [-160,-80,0,80,160])for(const p of [-132,-92,-52,-12,28,68,108,148]){addPalm(v+16,p,.72);addPalm(p,v-16,.7)}
   // Street lamps at road corners.
   function addLamp(x,z){
    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.12,.17,6.2,6),mat(0x3e4348));pole.position.set(x,3.1,z);pole.castShadow=true;scene.add(pole);
@@ -292,11 +310,11 @@ offline();if(!state.feed.length)say("Willkommen in Neustadt. Du startest bei nul
   window.addEventListener("keyup",e=>{keys[e.code]=false});
   const canvas=renderer.domElement;
   canvas.addEventListener("click",()=>{if(document.pointerLockElement!==canvas&&canvas.requestPointerLock)canvas.requestPointerLock()});
-  document.addEventListener("mousemove",e=>{if(document.pointerLockElement===canvas){yaw-=e.movementX*.0027;pitch=Math.max(.12,Math.min(.65,pitch+e.movementY*.0018))}});
+  document.addEventListener("mousemove",e=>{if(document.pointerLockElement===canvas){yaw+=e.movementX*.0027;pitch=Math.max(.12,Math.min(.65,pitch+e.movementY*.0018))}});
   let dragging=false,lastMouse={x:0,y:0};
   canvas.addEventListener("pointerdown",e=>{if(e.pointerType==="touch")return;dragging=true;lastMouse={x:e.clientX,y:e.clientY}});
   window.addEventListener("pointerup",()=>dragging=false);
-  window.addEventListener("pointermove",e=>{if(dragging&&document.pointerLockElement!==canvas){yaw-=(e.clientX-lastMouse.x)*.005;pitch=Math.max(.12,Math.min(.65,pitch+(e.clientY-lastMouse.y)*.003));lastMouse={x:e.clientX,y:e.clientY}}});
+  window.addEventListener("pointermove",e=>{if(dragging&&document.pointerLockElement!==canvas){yaw+=(e.clientX-lastMouse.x)*.005;pitch=Math.max(.12,Math.min(.65,pitch+(e.clientY-lastMouse.y)*.003));lastMouse={x:e.clientX,y:e.clientY}}});
   document.querySelectorAll("[data-move]").forEach(btn=>{
    const code=btn.dataset.move;btn.addEventListener("pointerdown",e=>{e.preventDefault();keys[code]=true;btn.setPointerCapture(e.pointerId)});
    ["pointerup","pointercancel","lostpointercapture"].forEach(ev=>btn.addEventListener(ev,()=>keys[code]=false));
@@ -319,7 +337,7 @@ offline();if(!state.feed.length)say("Willkommen in Neustadt. Du startest bei nul
     const nx=player.position.x+dx,nz=player.position.z+dz;
     if(Math.abs(nx)<166&&!blocked(nx,player.position.z))player.position.x=nx;
     if(Math.abs(nz)<166&&!blocked(player.position.x,nz))player.position.z=nz;
-    if(Math.abs(side)>0.05||Math.abs(forward)>0.05)player.rotation.y=yaw;
+    if(Math.abs(side)>0.05||Math.abs(forward)>0.05)player.rotation.y=yaw+Math.PI;
     walkTime+=dt*11;
    }
    velocityY-=19*dt;player.position.y+=velocityY*dt;
