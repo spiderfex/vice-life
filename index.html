@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>VICE LIFE</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#151f33;--line:#30405b;--muted:#a4b0c8;--green:#4ade80}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#243450,#0b1020 65%);color:#edf2ff;font:15px system-ui;padding-bottom:30px}
+header{padding:20px 5%;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#0b1020ed}
+.logo{font-size:24px;font-weight:900;letter-spacing:4px}.logo span{color:var(--green)}small,.muted{color:var(--muted)}
+main{max-width:1250px;margin:24px auto;padding:0 18px;display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+.panel{background:linear-gradient(145deg,#192740,#111a2c);border:1px solid var(--line);border-radius:15px;padding:18px;margin-bottom:16px}
+h2{font-size:17px;margin:0 0 15px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:16px}
+.stat{background:#0d1628;border:1px solid var(--line);border-radius:11px;padding:11px}.stat strong{display:block;font-size:21px;margin-top:4px}
+button{background:#263956;color:#fff;border:1px solid #405574;border-radius:9px;padding:10px 13px;cursor:pointer;font:inherit}button:hover{filter:brightness(1.2)}
+.green{background:#14532d;border-color:#23834a}.gold{background:#713f12;border-color:#a16207}
+.city{height:270px;border-radius:12px;padding:15px;background:linear-gradient(#1c3651,#34515b);overflow:hidden}.skyline{height:175px;display:flex;align-items:end;gap:8px}.building{flex:1;background:#34465f;border:1px solid #5e718a;border-radius:4px 4px 0 0;position:relative}.building:after{content:"";position:absolute;inset:12px 5px;background:repeating-linear-gradient(0deg,transparent 0 16px,#facc1555 17px 21px),repeating-linear-gradient(90deg,transparent 0 12px,#facc1555 13px 17px)}
+.road{height:45px;background:#192638;border-top:4px solid #66717c;margin:0 -15px}.road:after{content:"";display:block;border-top:3px dashed #ddd;position:relative;top:20px}
+.actions,.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.tabs{margin:0 0 12px}.tabs button{font-size:12px}.tabs button.active{border-color:var(--green);background:#14532d}
+.meter{display:grid;grid-template-columns:90px 1fr 30px;gap:9px;align-items:center;margin:10px 0;color:var(--muted);font-size:13px}.track{height:8px;background:#08111f;border-radius:8px;overflow:hidden}.fill{height:100%;background:var(--green)}.warn{background:#fbbf24}.bad{background:#fb7185}
+.item,.event{background:#0d1628;border:1px solid var(--line);border-radius:9px;padding:10px;margin:7px 0;font-size:13px}.item b{display:block}.feed{max-height:240px;overflow:auto}.pill{font-size:10px;padding:3px 7px;background:#30405b;border-radius:20px;color:#d7e1f4}
+@media(max-width:800px){main{grid-template-columns:1fr;margin:12px auto}.stats{grid-template-columns:repeat(2,1fr)}header{padding:15px}}
+</style></head>
+<body>
+<header><div><div class="logo">VICE <span>LIFE</span></div><small>Dein Leben. Deine Stadt. Deine Regeln.</small></div><div id="clock">Tag 1 · 08:00</div></header>
+<main><section>
+<div class="stats">
+<div class="stat"><small>Kontostand</small><strong id="cash">0 €</strong></div><div class="stat"><small>Einwohner</small><strong id="pop">10.000</strong></div><div class="stat"><small>Arbeitslosigkeit</small><strong id="unemp">8,4 %</strong></div><div class="stat"><small>Zufriedenheit</small><strong id="happy">68 %</strong></div></div>
+<div class="panel"><h2>🏙️ Neustadt — Deine neue Heimat</h2><div class="city"><b>NEUSTADT <span class="pill">Freie Stadt</span></b><div class="skyline"><div class="building" style="height:45%"></div><div class="building" style="height:72%"></div><div class="building" style="height:58%"></div><div class="building" style="height:92%"></div><div class="building" style="height:66%"></div><div class="building" style="height:48%"></div><div class="building" style="height:80%"></div><div class="building" style="height:55%"></div></div><div class="road"></div></div>
+<div class="actions"><button class="green" onclick="bottles()">♻️ Pfand sammeln (+8 €)</button><button onclick="food()">🥪 Essen (−5 €)</button><button onclick="rest()">🛏️ Ausruhen</button><button class="gold" onclick="nextDay()">⏩ Nächster Tag</button></div></div>
+<div class="panel"><h2>📊 Dein Zustand</h2><div class="meter">Hunger<div class="track"><div id="hbar" class="fill warn"></div></div><b id="hunger">40</b></div><div class="meter">Energie<div class="track"><div id="ebar" class="fill"></div></div><b id="energy">85</b></div><div class="meter">Gesundheit<div class="track"><div id="healthbar" class="fill"></div></div><b id="health">100</b></div></div>
+</section><aside>
+<div class="panel"><h2>🧠 Stadt-Simulation</h2><div class="tabs"><button class="active" data-tab="people" onclick="tab('people')">Einwohner</button><button data-tab="jobs" onclick="tab('jobs')">Berufe</button><button data-tab="politics" onclick="tab('politics')">Politik</button></div><div id="tabcontent"></div></div>
+<div class="panel"><h2>📰 Neustadt-Nachrichten</h2><div id="feed" class="feed"></div></div>
+<div class="panel"><h2>💾 Spielstand</h2><p class="muted">Der Spielstand wird lokal in diesem Browser gespeichert. Beim Wiederkommen wird vergangene Zeit rechnerisch nachgeholt.</p><button onclick="save()">Jetzt speichern</button> <button onclick="reset()">Neues Spiel</button></div>
+</aside></main>
+<p class="muted" style="text-align:center;font-size:11px">VICE LIFE Alpha 0.2 · Kostenlose Browser-Simulation · Bevölkerung derzeit statistisch modelliert, Beispielpersonen individuell dargestellt.</p>
+<script>
+const initial={day:1,cash:0,hunger:40,energy:85,health:100,pop:10000,unemp:8.4,happy:68,mayor:"Mara König",last:Date.now(),feed:[]};
+let state={...initial,...JSON.parse(localStorage.getItem("vice-life-save")||"{}")};
+const people=[
+{name:"Mara König",job:"Bürgermeisterin",goal:"Wohnraum bezahlbar machen",mood:"optimistisch",memory:"Hat die letzte Wahl knapp gewonnen."},
+{name:"Deniz Yilmaz",job:"Kfz-Mechatroniker",goal:"Eigene Werkstatt eröffnen",mood:"ehrgeizig",memory:"Spart für Werkzeug."},
+{name:"Lena Hartmann",job:"Pflegefachkraft",goal:"Bessere Arbeitsbedingungen",mood:"müde",memory:"Hat eine weitere Nachtschicht übernommen."},
+{name:"Tobias Berger",job:"Arbeitsuchend",goal:"Festen Job finden",mood:"hoffnungsvoll",memory:"Hat zwei Bewerbungen verschickt."}];
+const jobs=[["Bäckerei Sonnengold","Verkäufer/in","2.100 €/Monat"],["Stadtwerke Neustadt","Elektriker/in","3.200 €/Monat"],["Klinikum Neustadt","Pflegefachkraft","3.400 €/Monat"],["BauTeam GmbH","Bauhelfer/in","2.500 €/Monat"],["Autohaus West","Kfz-Mechatroniker/in","3.100 €/Monat"]];
+function euro(n){return Math.round(n).toLocaleString("de-DE")+" €"}
+function say(message){state.feed.unshift({day:state.day,message});state.feed=state.feed.slice(0,30);drawFeed()}
+function drawFeed(){document.getElementById("feed").innerHTML=state.feed.slice(0,12).map(x=>'<div class="event"><small>Tag '+x.day+'</small> · '+x.message+'</div>').join("")||'<p class="muted">Noch ist es ruhig in der Stadt.</p>'}
+function save(){state.last=Date.now();localStorage.setItem("vice-life-save",JSON.stringify(state));say("Spielstand gespeichert.");render()}
+function tab(which){document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===which));let el=document.getElementById("tabcontent");if(which==="people")el.innerHTML=people.map(p=>'<div class="item"><b>'+p.name+' <span class="pill">'+p.mood+'</span></b>'+p.job+'<div class="muted">Ziel: '+p.goal+'<br>Erinnerung: '+p.memory+'</div></div>').join("");if(which==="jobs")el.innerHTML=jobs.map(j=>'<div class="item"><b>'+j[0]+'</b>'+j[1]+' · '+j[2]+'</div>').join("")+'<p class="muted">Weitere Berufsfelder, Bewerbungen und Unternehmens-KI folgen in späteren Ausbaustufen.</p>';if(which==="politics")el.innerHTML='<div class="item"><b>Bürgermeister/in: '+state.mayor+'</b>Wahl alle 30 Tage</div><div class="item"><b>🌱 Zukunftspartei</b>ÖPNV, bezahlbarer Wohnraum, Klimaschutz</div><div class="item"><b>💼 Bürgerliche Liste</b>Wirtschaftsförderung, niedrigere Abgaben, Sicherheit</div><div class="item"><b>🤝 Soziale Allianz</b>Sozialleistungen, Bildung, faire Löhne</div><button onclick="election()">🗳️ Wahl simulieren</button>'}
+function render(){document.getElementById("cash").textContent=euro(state.cash);document.getElementById("pop").textContent=state.pop.toLocaleString("de-DE");document.getElementById("unemp").textContent=state.unemp.toFixed(1).replace(".",",")+" %";document.getElementById("happy").textContent=Math.round(state.happy)+" %";document.getElementById("clock").textContent="Tag "+state.day+" · 08:00";for(let k of ["hunger","energy","health"]){document.getElementById(k).textContent=Math.round(state[k]);let bar=document.getElementById(k==="hunger"?"hbar":k==="energy"?"ebar":"healthbar");bar.style.width=state[k]+"%";bar.className="fill "+(state[k]<25?"bad":state[k]<50?"warn":"")}drawFeed();tab(document.querySelector(".tabs button.active")?.dataset.tab||"people")}
+function bottles(){state.cash+=8;state.energy=Math.max(0,state.energy-5);state.hunger=Math.min(100,state.hunger+3);say("Du hast Pfand gesammelt und 8 € verdient.");render()}
+function food(){if(state.cash<5){say("Du hast nicht genug Geld für eine Mahlzeit.");render();return}state.cash-=5;state.hunger=Math.max(0,state.hunger-28);state.health=Math.min(100,state.health+2);say("Du hast dir etwas zu essen gekauft.");render()}
+function rest(){state.energy=Math.min(100,state.energy+35);state.hunger=Math.min(100,state.hunger+8);say("Du hast dich ausgeruht.");render()}
+function election(){state.mayor=["Mara König","Jonas Feld","Aylin Demir"][Math.floor(Math.random()*3)];state.happy=Math.max(35,Math.min(90,state.happy+Math.random()*5-2));say("Wahl entschieden: "+state.mayor+" wird Bürgermeister/in.");render()}
+function nextDay(){state.day++;state.hunger=Math.min(100,state.hunger+18);state.energy=Math.max(10,state.energy-12);state.unemp=Math.max(3,Math.min(20,state.unemp+(Math.random()-.5)*.25));state.happy=Math.max(20,Math.min(95,state.happy+(Math.random()-.48)*1.5));if(state.hunger>85){state.health=Math.max(0,state.health-5);say("Starker Hunger belastet deine Gesundheit.")}if(state.day%7===0)say("Wochenbericht: Die Stadt veröffentlicht neue Wirtschafts- und Arbeitsmarktzahlen.");if(state.day%30===0)election();let headlines=["Ein neues Café eröffnet in der Innenstadt.","Der Stadtrat diskutiert bezahlbaren Wohnraum.","Die Stadtwerke suchen Fachkräfte.","Ein Unternehmen erweitert seine Produktion.","Bürger fordern bessere Busverbindungen.","Die Arbeitsagentur meldet neue Stellenangebote."];say(headlines[Math.floor(Math.random()*headlines.length)]);save()}
+function reset(){if(!confirm("Spielstand wirklich löschen und neu starten?"))return;localStorage.removeItem("vice-life-save");state={...initial,last:Date.now(),feed:[]};say("Willkommen in Neustadt. Du startest bei null.");render()}
+function offline(){let days=Math.min(30,Math.floor((Date.now()-(state.last||Date.now()))/86400000));if(days>0){state.day+=days;state.hunger=Math.min(100,state.hunger+days*12);state.energy=Math.max(15,state.energy-days*5);say("Während deiner Abwesenheit sind rechnerisch "+days+" Tage vergangen. Neustadt hat sich weiterentwickelt.")}}
+offline();if(!state.feed.length)say("Willkommen in Neustadt. Du startest bei null – baue dir ein neues Leben auf.");render();window.addEventListener("beforeunload",()=>{state.last=Date.now();localStorage.setItem("vice-life-save",JSON.stringify(state))});
+</script></body></html>
